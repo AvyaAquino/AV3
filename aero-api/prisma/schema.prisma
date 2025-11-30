@@ -1,0 +1,119 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Aeronave {
+  id         String   @id @default(uuid()) 
+  codigo     String   @unique              
+  modelo     String
+  tipo       TipoAeronave
+  capacidade Int
+  alcance    Int
+  createdAt  DateTime @default(now())
+
+  pecas   Peca[]
+  etapas  Etapa[]
+  testes  Teste[]
+
+  @@map("aeronaves") 
+}
+
+model Peca {
+  id         String     @id @default(uuid())
+  nome       String
+  tipo       TipoPeca
+  fornecedor String
+  status     StatusPeca @default(EM_PRODUCAO)
+  
+  aeronaveId String
+  aeronave   Aeronave @relation(fields: [aeronaveId], references: [id], onDelete: Cascade)
+
+  @@map("pecas")
+}
+
+model Etapa {
+  id         String      @id @default(uuid())
+  nome       String
+  prazo      String
+  status     StatusEtapa @default(PENDENTE)
+  ordem      Int         @default(0) 
+
+  aeronaveId String
+  aeronave   Aeronave @relation(fields: [aeronaveId], references: [id], onDelete: Cascade)
+
+  funcionarios Funcionario[]
+
+  @@map("etapas")
+}
+
+model Funcionario {
+  id             String         @id @default(uuid())
+  nome           String
+  usuario        String         @unique
+  senha          String        
+  nivelPermissao NivelPermissao
+
+  etapas Etapa[]
+
+  @@map("funcionarios")
+}
+
+model Teste {
+  id        String         @id @default(uuid())
+  tipo      TipoTeste
+  resultado ResultadoTeste
+  data      DateTime       @default(now())
+
+  aeronaveId String
+  aeronave   Aeronave @relation(fields: [aeronaveId], references: [id], onDelete: Cascade)
+
+  @@map("testes")
+}
+
+
+enum TipoAeronave {
+  COMERCIAL
+  MILITAR
+}
+
+enum TipoPeca {
+  NACIONAL
+  IMPORTADA
+}
+
+enum StatusPeca {
+  EM_PRODUCAO
+  EM_TRANSPORTE
+  PRONTA
+}
+
+enum StatusEtapa {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+}
+
+enum NivelPermissao {
+  ADMINISTRADOR
+  ENGENHEIRO
+  OPERADOR
+}
+
+enum TipoTeste {
+  ELETRICO
+  HIDRAULICO
+  AERODINAMICO
+}
+
+enum ResultadoTeste {
+  APROVADO
+  REPROVADO
+}
